@@ -1,0 +1,23 @@
+[project]
+name = "anpr-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Shameer", email = "shameer.entspos@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "easyocr>=1.7.1",
+    "numpy>=2.5.5",
+    "opencv-python>=4.9",
+    "pyyaml>=6.0",
+    "ultralytics>=8.3.0",
+]
+
+[project.scripts]
+anpr-project = "anpr_project:main"
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"

@@ -1,0 +1,53 @@
+# ================= INPUT =================
+# Testing: video file.   Live CCTV: RTSP URL.   Webcam: 0
+source: "videos/car-detection.mp4"
+# source: "rtsp://admin:password@192.168.1.64:554/Streaming/Channels/101"
+camera_id: "gate-1"
+loop_video: false
+process_every_n_frames: 2     # raise this if your PC is slow
+
+# ================= MODELS =================
+vehicle_model: "yolov8n.pt"   # auto-downloads. yolov8s.pt = more accurate
+vehicle_conf: 0.4
+imgsz: 640
+tracker: "bytetrack.yaml"
+device: "cpu"                 # "cpu", "0" (NVIDIA GPU), "mps" (Apple)
+
+# Plate detector (YOLO weights trained on license plates). STRONGLY recommended.
+# Without it, OCR runs on the lower part of the vehicle and accuracy is much lower.
+plate_model: "models/plate.pt"
+
+# ================= PLATE READING (this is the record) =================
+ocr_languages: ["en"]
+ocr_gpu: false
+ocr_every_n_frames: 2         # read plate every N processed frames per vehicle
+ocr_max_attempts: 12          # max OCR tries per vehicle
+min_vehicle_height_px: 80     # ignore vehicles smaller than this (too far to read)
+min_plate_width_px: 40        # ignore plate crops narrower than this
+plate_min_conf: 0.30          # discard single reads below this
+
+# Plate formats (regex on letters+digits only, no spaces/hyphens). Reads matching
+# one get full weight and common OCR mix-ups (O/0, I/1, S/5, B/8) are auto-corrected.
+plate_patterns:
+  - '[A-Z]{2,4}\d{2,6}'       # Pakistan style: LEA1234, ABC123, LEA211234
+strict_format: false          # true = throw away reads that match no pattern
+
+# ================= RECORD LOGIC =================
+confirm_reads: 3              # same plate read this many times -> record immediately
+confirm_conf: 0.60            # ...with this average confidence
+min_reads_accept: 2           # at vehicle exit: >= this many agreeing reads -> "confirmed"
+high_conf_accept: 0.80        # ...or a single read this confident -> "confirmed"
+                              # otherwise record is saved as "low_conf"
+lost_frames: 30               # vehicle gone for this many frames -> finalize its record
+min_track_frames: 8           # ignore vehicles seen for fewer frames than this
+cooldown_sec: 60              # same plate within this window = same record (no duplicates)
+log_unreadable: true          # also save vehicles whose plate could not be read
+
+# ================= OPTIONAL ENTRY/EXIT DIRECTION =================
+# Two points [x, y] (0-1). Set `line: null` to turn direction off.
+line: [[0.05, 0.60], [0.95, 0.60]]
+entry_direction: "positive"   # if ENTRY/EXIT look swapped, use "negative"
+
+# ================= STORAGE =================
+db_path: "data/plates.db"
+snapshot_dir: "data/snapshots"
